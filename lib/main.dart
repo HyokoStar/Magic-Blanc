@@ -6,7 +6,6 @@ import 'see_all.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialisation Supabase
   await Supabase.initialize(
     url: 'https://lzpdlqbiluxekjiztrai.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6cGRscWJpbHV4ZWtqaXp0cmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MTQ2NjksImV4cCI6MjA2MDk5MDY2OX0.-RjhGtPyBVHu8PjR4cjk0w8CAGX7f7w5pqkQdPl_4ng',
@@ -45,17 +44,10 @@ class _MagicHomePageState extends State<MagicHomePage> {
 
   Future<void> fetchCartes() async {
     final response = await supabase.from('carte').select();
-    print('✅ Cartes : $response');
-
-    if (response.isEmpty) {
-      print('⚠️ Aucune carte récupérée !');
-    }
-
     setState(() {
       cartes = response;
       filteredCartes = cartes;
 
-      // Tri des cartes par rareté
       cartes.sort((a, b) {
         final rareteA = a['rarete'].toLowerCase();
         final rareteB = b['rarete'].toLowerCase();
@@ -100,6 +92,11 @@ class _MagicHomePageState extends State<MagicHomePage> {
     }
   }
 
+  String? getPublicImageUrl(String? fileName) {
+    if (fileName == null || fileName.isEmpty) return null;
+    return "https://lzpdlqbiluxekjiztrai.supabase.co/storage/v1/object/public/images/$fileName";
+  }
+
   void modifierCarte(Map<String, dynamic> carte) async {
     TextEditingController nomController = TextEditingController(text: carte['nom']);
     TextEditingController descriptionController = TextEditingController(text: carte['description']);
@@ -114,29 +111,14 @@ class _MagicHomePageState extends State<MagicHomePage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nomController,
-                decoration: InputDecoration(labelText: 'Nom'),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-              ),
-              TextField(
-                controller: rareteController,
-                decoration: InputDecoration(labelText: 'Rareté'),
-              ),
-              TextField(
-                controller: imageController,
-                decoration: InputDecoration(labelText: 'URL de l\'image'),
-              ),
+              TextField(controller: nomController, decoration: InputDecoration(labelText: 'Nom')),
+              TextField(controller: descriptionController, decoration: InputDecoration(labelText: 'Description')),
+              TextField(controller: rareteController, decoration: InputDecoration(labelText: 'Rareté')),
+              TextField(controller: imageController, decoration: InputDecoration(labelText: 'Nom du fichier image')),
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Annuler'),
-            ),
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Annuler')),
             ElevatedButton(
               onPressed: () async {
                 final updatedCarte = {
@@ -145,12 +127,7 @@ class _MagicHomePageState extends State<MagicHomePage> {
                   'rarete': rareteController.text,
                   'image': imageController.text,
                 };
-
-                await supabase
-                    .from('carte')
-                    .update(updatedCarte)
-                    .eq('id', carte['id']);
-
+                await supabase.from('carte').update(updatedCarte).eq('id', carte['id']);
                 Navigator.of(context).pop();
                 fetchCartes();
               },
@@ -170,18 +147,8 @@ class _MagicHomePageState extends State<MagicHomePage> {
           title: Text('Confirmation'),
           content: Text('Voulez-vous vraiment supprimer cette carte ?'),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: Text('Non'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: Text('Oui'),
-            ),
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('Non')),
+            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text('Oui')),
           ],
         );
       },
@@ -217,29 +184,20 @@ class _MagicHomePageState extends State<MagicHomePage> {
                         );
                       },
                       child: Text('Ajouter'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[200],
-                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[200]),
                     ),
                     SizedBox(width: 20),
-                    CircleAvatar(
-                      child: Icon(Icons.person),
-                      backgroundColor: Colors.yellow[300],
-                    ),
+                    CircleAvatar(child: Icon(Icons.person), backgroundColor: Colors.yellow[300]),
                     SizedBox(width: 20),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => SeeAllPage(),
-                          ),
+                          MaterialPageRoute(builder: (context) => SeeAllPage()),
                         );
                       },
                       child: Text('Voir'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[200],
-                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red[200]),
                     ),
                   ],
                 ),
@@ -253,18 +211,9 @@ class _MagicHomePageState extends State<MagicHomePage> {
             padding: const EdgeInsets.all(10.0),
             child: Column(
               children: [
-                Text(
-                  "Magic Card",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[300]),
-                ),
+                Text("Magic Card", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[300])),
                 SizedBox(height: 10),
-                // >>> IMAGE ICI <<< 
-                Image.asset(
-                  '../assets/image/magic_card.png',
-                  height: 200,
-                  width: 280,
-                  fit: BoxFit.cover,
-                ),
+                Image.asset('../assets/image/magic_card.png', height: 200, width: 280, fit: BoxFit.cover),
               ],
             ),
           ),
@@ -273,9 +222,7 @@ class _MagicHomePageState extends State<MagicHomePage> {
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Text(
-              "Vous êtes actuellement sur Magic Card !\n"
-              "Bienvenue sur votre compte personnel pour gérer vos cartes !\n\n"
-              "Collectionnez autant de cartes que vous pouvez !\n",
+              "Vous êtes actuellement sur Magic Card !\nBienvenue sur votre compte personnel pour gérer vos cartes !\n\nCollectionnez autant de cartes que vous pouvez !\n",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16),
             ),
@@ -290,10 +237,7 @@ class _MagicHomePageState extends State<MagicHomePage> {
               decoration: InputDecoration(
                 hintText: 'Rechercher une carte...',
                 prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ),
@@ -310,19 +254,15 @@ class _MagicHomePageState extends State<MagicHomePage> {
                         itemBuilder: (context, index) {
                           final carte = filteredCartes[index];
                           final rarete = carte['rarete'] ?? '';
+                          final imageUrl = getPublicImageUrl(carte['image']);
+
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.purple[50],
                                 borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
+                                boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 8, offset: Offset(0, 4))],
                               ),
                               child: Column(
                                 children: [
@@ -333,19 +273,18 @@ class _MagicHomePageState extends State<MagicHomePage> {
                                           topLeft: Radius.circular(12),
                                           bottomLeft: Radius.circular(12),
                                         ),
-                                        child: carte['image'] != null
-                                            ? Image.network(
-                                                carte['image'],
-                                                width: 100,
-                                                height: 100,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (ctx, _, __) => Icon(Icons.broken_image, size: 80),
-                                              )
-                                            : Container(
+                                        child: imageUrl == null
+                                            ? Container(
                                                 width: 100,
                                                 height: 100,
                                                 color: Colors.grey[300],
-                                                child: Icon(Icons.image_not_supported, size: 50),
+                                                child: Icon(Icons.broken_image, size: 50),
+                                              )
+                                            : Image.network(
+                                                imageUrl,
+                                                width: 100,
+                                                height: 100,
+                                                fit: BoxFit.cover,
                                               ),
                                       ),
                                       Expanded(
@@ -354,24 +293,11 @@ class _MagicHomePageState extends State<MagicHomePage> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                carte['nom'] ?? '',
-                                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                              ),
+                                              Text(carte['nom'] ?? '', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                                               SizedBox(height: 8),
-                                              Text(
-                                                carte['description'] ?? '',
-                                                style: TextStyle(fontSize: 14),
-                                              ),
+                                              Text(carte['description'] ?? '', style: TextStyle(fontSize: 14)),
                                               SizedBox(height: 8),
-                                              Text(
-                                                "Rareté : $rarete",
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: getRareteColor(rarete),
-                                                ),
-                                              ),
+                                              Text("Rareté : $rarete", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: getRareteColor(rarete))),
                                             ],
                                           ),
                                         ),
@@ -381,14 +307,8 @@ class _MagicHomePageState extends State<MagicHomePage> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      IconButton(
-                                        icon: Icon(Icons.edit, color: Colors.green),
-                                        onPressed: () => modifierCarte(carte),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () => supprimerCarte(carte['id']),
-                                      ),
+                                      IconButton(icon: Icon(Icons.edit, color: Colors.green), onPressed: () => modifierCarte(carte)),
+                                      IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: () => supprimerCarte(carte['id'])),
                                       SizedBox(width: 10),
                                     ],
                                   ),
@@ -400,7 +320,6 @@ class _MagicHomePageState extends State<MagicHomePage> {
                       ),
           ),
 
-          // Footer
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Text("Nous contacter :", style: TextStyle(fontSize: 14)),
