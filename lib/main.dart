@@ -94,6 +94,13 @@ class _MagicHomePageState extends State<MagicHomePage> {
 
   String? getPublicImageUrl(String? fileName) {
     if (fileName == null || fileName.isEmpty) return null;
+
+    // ✅ Si c’est déjà une URL complète, on la retourne telle quelle
+    if (fileName.startsWith('http://') || fileName.startsWith('https://')) {
+      return fileName;
+    }
+
+    // ✅ Sinon, on considère que c’est un fichier interne dans Supabase Storage
     return "https://lzpdlqbiluxekjiztrai.supabase.co/storage/v1/object/public/images/$fileName";
   }
 
