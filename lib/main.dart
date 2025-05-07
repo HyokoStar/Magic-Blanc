@@ -1,5 +1,8 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 import 'add.dart';
 import 'see_all.dart';
 
@@ -94,53 +97,90 @@ class _MagicHomePageState extends State<MagicHomePage> {
 
   String? getPublicImageUrl(String? fileName) {
     if (fileName == null || fileName.isEmpty) return null;
-
-    // ✅ Si c’est déjà une URL complète, on la retourne telle quelle
     if (fileName.startsWith('http://') || fileName.startsWith('https://')) {
       return fileName;
     }
-
-    // ✅ Sinon, on considère que c’est un fichier interne dans Supabase Storage
     return "https://lzpdlqbiluxekjiztrai.supabase.co/storage/v1/object/public/images/$fileName";
   }
 
   void modifierCarte(Map<String, dynamic> carte) async {
+    final picker = ImagePicker();
+    Uint8List? newImageBytes;
+    String? newImageExtension;
+
     TextEditingController nomController = TextEditingController(text: carte['nom']);
     TextEditingController descriptionController = TextEditingController(text: carte['description']);
     TextEditingController rareteController = TextEditingController(text: carte['rarete']);
-    TextEditingController imageController = TextEditingController(text: carte['image']);
+
+    Future<void> _pickNewImage() async {
+      final picked = await picker.pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        newImageBytes = await picked.readAsBytes();
+        newImageExtension = picked.name.split('.').last;
+      }
+    }
 
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Modifier la carte'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nomController, decoration: InputDecoration(labelText: 'Nom')),
-              TextField(controller: descriptionController, decoration: InputDecoration(labelText: 'Description')),
-              TextField(controller: rareteController, decoration: InputDecoration(labelText: 'Rareté')),
-              TextField(controller: imageController, decoration: InputDecoration(labelText: 'Nom du fichier image')),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Annuler')),
-            ElevatedButton(
-              onPressed: () async {
-                final updatedCarte = {
-                  'nom': nomController.text,
-                  'description': descriptionController.text,
-                  'rarete': rareteController.text,
-                  'image': imageController.text,
-                };
-                await supabase.from('carte').update(updatedCarte).eq('id', carte['id']);
-                Navigator.of(context).pop();
-                fetchCartes();
-              },
-              child: Text('Sauvegarder'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Modifier la carte'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(controller: nomController, decoration: InputDecoration(labelText: 'Nom')),
+                    TextField(controller: descriptionController, decoration: InputDecoration(labelText: 'Description')),
+                    TextField(controller: rareteController, decoration: InputDecoration(labelText: 'Rareté')),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await _pickNewImage();
+                        setState(() {});
+                      },
+                      child: Text('Changer l\'image'),
+                    ),
+                    SizedBox(height: 10),
+                    newImageBytes != null
+                        ? Image.memory(newImageBytes!, height: 100)
+                        : carte['image'] != null
+                            ? Image.network(getPublicImageUrl(carte['image'])!, height: 100)
+                            : Container(),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Annuler')),
+                ElevatedButton(
+                  onPressed: () async {
+                    String? newImageUrl = carte['image'];
+
+                    if (newImageBytes != null && newImageExtension != null) {
+                      final fileName = "${Uuid().v4()}.$newImageExtension";
+                      await supabase.storage
+                          .from('images')
+                          .uploadBinary(fileName, newImageBytes!, fileOptions: FileOptions(contentType: 'image/$newImageExtension'));
+                      newImageUrl = fileName;
+                    }
+
+                    final updatedCarte = {
+                      'nom': nomController.text,
+                      'description': descriptionController.text,
+                      'rarete': rareteController.text,
+                      'image': newImageUrl,
+                    };
+
+                    await supabase.from('carte').update(updatedCarte).eq('id', carte['id']);
+                    Navigator.of(context).pop();
+                    fetchCartes();
+                  },
+                  child: Text('Sauvegarder'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -173,7 +213,6 @@ class _MagicHomePageState extends State<MagicHomePage> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Header
           Container(
             color: Colors.purple[300],
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -212,8 +251,6 @@ class _MagicHomePageState extends State<MagicHomePage> {
               ],
             ),
           ),
-
-          // Titre + Image
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Column(
@@ -224,8 +261,6 @@ class _MagicHomePageState extends State<MagicHomePage> {
               ],
             ),
           ),
-
-          // Texte d'accueil
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Text(
@@ -234,8 +269,6 @@ class _MagicHomePageState extends State<MagicHomePage> {
               style: TextStyle(fontSize: 16),
             ),
           ),
-
-          // Barre de recherche
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
             child: TextField(
@@ -248,8 +281,6 @@ class _MagicHomePageState extends State<MagicHomePage> {
               ),
             ),
           ),
-
-          // Liste des cartes
           Expanded(
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
@@ -326,7 +357,6 @@ class _MagicHomePageState extends State<MagicHomePage> {
                         },
                       ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Text("Nous contacter :", style: TextStyle(fontSize: 14)),
