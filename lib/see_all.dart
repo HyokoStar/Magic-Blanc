@@ -42,7 +42,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
   Color getRareteColor(String rarete) {
     switch (rarete.toLowerCase()) {
       case 'légendaire':
-        return Colors.amber;
+        return const Color.fromARGB(255, 255, 174, 0);
       case 'mythique':
         return Colors.red;
       case 'épique':
@@ -61,7 +61,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Livret de cartes'),
-        backgroundColor: Colors.purple[300], // Couleur du bandeau
+        backgroundColor: const Color.fromRGBO(1447, 132, 213, 1), // Couleur du bandeau
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -72,7 +72,7 @@ class _SeeAllPageState extends State<SeeAllPage> {
                 // Section Mythique
                 _buildCardSection('Mythique', filterByRarete('mythique')),
                 // Section Epique
-                _buildCardSection('Epique', filterByRarete('épique')),
+                _buildCardSection('Épique', filterByRarete('épique')),
                 // Section Rare
                 _buildCardSection('Rare', filterByRarete('rare')),
                 // Section Commun
