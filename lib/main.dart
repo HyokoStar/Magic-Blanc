@@ -89,7 +89,7 @@ class _MagicHomePageState extends State<MagicHomePage> {
       case 'mythique':
         return Colors.red;
       case 'légendaire':
-        return Colors.amber;
+        return const Color.fromARGB(255, 255, 174, 0);
       default:
         return Colors.black;
     }
@@ -132,7 +132,12 @@ class _MagicHomePageState extends State<MagicHomePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(controller: nomController, decoration: InputDecoration(labelText: 'Nom')),
-                    TextField(controller: descriptionController, decoration: InputDecoration(labelText: 'Description')),
+                    TextField(
+                      controller: descriptionController, 
+                      decoration: InputDecoration(labelText: 'Description'),
+                      maxLines: null,  // Permet d'avoir un champ de texte dynamique
+                      keyboardType: TextInputType.multiline,  // Permet d'écrire sur plusieurs lignes
+                    ),
                     TextField(controller: rareteController, decoration: InputDecoration(labelText: 'Rareté')),
                     SizedBox(height: 10),
                     ElevatedButton(
@@ -214,12 +219,12 @@ class _MagicHomePageState extends State<MagicHomePage> {
       body: Column(
         children: [
           Container(
-            color: Colors.purple[300],
+            color: const Color.fromRGBO(1447, 132, 213, 1),
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.cancel, size: 30),
+                Icon(Icons.cancel, size: 30, color: const Color.fromARGB(255, 207, 207, 207),),
                 Row(
                   children: [
                     ElevatedButton(
@@ -229,11 +234,11 @@ class _MagicHomePageState extends State<MagicHomePage> {
                           MaterialPageRoute(builder: (context) => AddCartePage()),
                         );
                       },
-                      child: Text('Ajouter'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[200]),
+                      child: Text('Ajouter', style: TextStyle(color: const Color.fromARGB(255, 138, 96, 5))),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(251, 231, 126, 1)),
                     ),
                     SizedBox(width: 20),
-                    CircleAvatar(child: Icon(Icons.person), backgroundColor: Colors.yellow[300]),
+                    CircleAvatar(child: Icon(Icons.person, color: const Color.fromARGB(255, 17, 114, 114),), backgroundColor: const Color.fromRGBO(46, 203, 204, 1)),
                     SizedBox(width: 20),
                     ElevatedButton(
                       onPressed: () {
@@ -242,12 +247,12 @@ class _MagicHomePageState extends State<MagicHomePage> {
                           MaterialPageRoute(builder: (context) => SeeAllPage()),
                         );
                       },
-                      child: Text('Voir'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red[200]),
+                      child: Text('Voir', style: TextStyle(color: const Color.fromARGB(255, 138, 96, 5))),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(251, 231, 126, 1)),
                     ),
                   ],
                 ),
-                Icon(Icons.cancel, size: 30),
+                Icon(Icons.cancel, size: 30, color: const Color.fromARGB(255, 207, 207, 207),),
               ],
             ),
           ),
@@ -255,7 +260,7 @@ class _MagicHomePageState extends State<MagicHomePage> {
             padding: const EdgeInsets.all(10.0),
             child: Column(
               children: [
-                Text("Magic Card", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber[300])),
+                Text("Magic Card", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 255, 174, 0))),
                 SizedBox(height: 10),
                 Image.asset('../assets/image/magic_card.png', height: 200, width: 280, fit: BoxFit.cover),
               ],
@@ -264,7 +269,7 @@ class _MagicHomePageState extends State<MagicHomePage> {
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Text(
-              "Vous êtes actuellement sur Magic Card !\nBienvenue sur votre compte personnel pour gérer vos cartes !\n\nCollectionnez autant de cartes que vous pouvez !\n",
+              "Vous êtes actuellement sur Magic Card !\nBienvenue sur votre compte personnel pour gérer vos cartes !",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16),
             ),
@@ -298,9 +303,8 @@ class _MagicHomePageState extends State<MagicHomePage> {
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.purple[50],
+                                color: const Color.fromARGB(104, 215, 202, 233),
                                 borderRadius: BorderRadius.circular(12),
-                                boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 8, offset: Offset(0, 4))],
                               ),
                               child: Column(
                                 children: [
@@ -345,8 +349,8 @@ class _MagicHomePageState extends State<MagicHomePage> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      IconButton(icon: Icon(Icons.edit, color: Colors.green), onPressed: () => modifierCarte(carte)),
-                                      IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: () => supprimerCarte(carte['id'])),
+                                      IconButton(icon: Icon(Icons.edit, color: const Color.fromRGBO(46, 203, 204, 1)), onPressed: () => modifierCarte(carte)),
+                                      IconButton(icon: Icon(Icons.delete, color: const Color.fromARGB(255, 204, 46, 46)), onPressed: () => supprimerCarte(carte['id'])),
                                       SizedBox(width: 10),
                                     ],
                                   ),
