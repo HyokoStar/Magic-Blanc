@@ -15,7 +15,7 @@ class _AddCartePageState extends State<AddCartePage> {
 
   final TextEditingController nomController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController rareteController = TextEditingController();
+  String? selectedRarete;
 
   Uint8List? _imageBytes;
   String? _imageExtension;
@@ -34,15 +34,11 @@ class _AddCartePageState extends State<AddCartePage> {
   Future<String?> _uploadImage(Uint8List bytes, String ext) async {
     try {
       final fileName = "${const Uuid().v4()}.$ext";
-
       final res = await supabase.storage
           .from('images')
           .uploadBinary(fileName, bytes, fileOptions: FileOptions(contentType: 'image/$ext'));
-
       if (res.isEmpty) return null;
-
-      final publicUrl = supabase.storage.from('images').getPublicUrl(fileName);
-      return publicUrl;
+      return supabase.storage.from('images').getPublicUrl(fileName);
     } catch (e) {
       print("Erreur upload : $e");
       return null;
@@ -50,14 +46,29 @@ class _AddCartePageState extends State<AddCartePage> {
   }
 
   Future<void> _ajouterCarte() async {
+    // ✅ Afficher la popup tout de suite
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("Carte ajoutée"),
+        content: Text("La carte a été ajoutée (ou tentative d'ajout effectuée)."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(), // ferme la popup
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+
+    // Ensuite, on essaie de sauvegarder quand même
     if (_imageBytes == null || _imageExtension == null ||
-        nomController.text.isEmpty || descriptionController.text.isEmpty || rareteController.text.isEmpty) {
+        nomController.text.isEmpty || descriptionController.text.isEmpty || selectedRarete == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Tous les champs sont requis")));
       return;
     }
 
     final imageUrl = await _uploadImage(_imageBytes!, _imageExtension!);
-
     if (imageUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Échec de l'upload de l'image")));
       return;
@@ -66,15 +77,13 @@ class _AddCartePageState extends State<AddCartePage> {
     final carte = {
       'nom': nomController.text,
       'description': descriptionController.text,
-      'rarete': rareteController.text,
+      'rarete': selectedRarete,
       'image': imageUrl,
     };
 
     final response = await supabase.from('carte').insert(carte);
 
-    if (response.error == null) {
-      Navigator.pop(context);
-    } else {
+    if (response.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur : ${response.error!.message}")));
     }
   }
@@ -84,7 +93,7 @@ class _AddCartePageState extends State<AddCartePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Ajouter une carte"),
-        backgroundColor: Colors.purple[300],
+        backgroundColor: const Color.fromRGBO(1447, 132, 213, 1), // Couleur du bandeau
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -98,10 +107,23 @@ class _AddCartePageState extends State<AddCartePage> {
             TextField(
               controller: descriptionController,
               decoration: InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
             ),
             SizedBox(height: 16),
-            TextField(
-              controller: rareteController,
+            DropdownButtonFormField<String>(
+              value: selectedRarete,
+              onChanged: (value) {
+                setState(() {
+                  selectedRarete = value;
+                });
+              },
+              items: ['commun', 'rare', 'épique', 'mythique', 'légendaire']
+                  .map((rarete) => DropdownMenuItem(
+                        value: rarete,
+                        child: Text(rarete[0].toUpperCase() + rarete.substring(1)),
+                      ))
+                  .toList(),
               decoration: InputDecoration(labelText: 'Rareté', border: OutlineInputBorder()),
             ),
             SizedBox(height: 16),
