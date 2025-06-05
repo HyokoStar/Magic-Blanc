@@ -57,7 +57,7 @@ class _AddCartePageState extends State<AddCartePage> {
       context: context,
       builder: (_) => AlertDialog(
         title: Text("Carte ajoutée"),
-        content: Text("La carte a été ajoutée (ou tentative d'ajout effectuée)."),
+        content: Text("La carte a été ajoutée."),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(), // Ferme l'alerte
